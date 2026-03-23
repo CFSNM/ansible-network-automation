@@ -1,0 +1,4 @@
+all:
+  hosts:
+    localhost:
+      ansible_connection: local   # No necesita SSH, ejecuta en el propio ordenador

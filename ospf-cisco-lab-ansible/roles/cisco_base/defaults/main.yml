@@ -1,0 +1,5 @@
+﻿---
+mgmt_interface: GigabitEthernet1/0
+ssh_modulus:    2048
+domain_name:    lab.local
+mgmt_gateway:   192.168.100.254

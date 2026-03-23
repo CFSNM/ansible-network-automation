@@ -1,0 +1,6 @@
+﻿---
+ospf_process_id:  1
+mgmt_interface:   GigabitEthernet1/0
+mgmt_gateway:     192.168.100.254
+domain_name:      lab.local
+ssh_modulus:      2048

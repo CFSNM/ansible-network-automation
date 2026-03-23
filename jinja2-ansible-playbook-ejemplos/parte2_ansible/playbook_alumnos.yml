@@ -1,0 +1,56 @@
+---
+# ══════════════════════════════════════════════════════════════════
+#  Playbook: Preparar entorno de estudio para un alumno
+#  Fichero:  playbook_alumnos.yml
+#  Uso:      ansible-playbook -i inventario.yml playbook_alumnos.yml
+# ══════════════════════════════════════════════════════════════════
+
+- name: Preparar entorno de estudio para un alumno
+  hosts: localhost
+  gather_facts: false
+
+  # ── Variables del alumno ──────────────────────────────────────────
+  # Puedes sobreescribir cualquier variable desde la línea de comandos
+  # con el flag -e, por ejemplo:
+  #   ansible-playbook -i inventario.yml playbook_alumnos.yml -e "fecha=2025-09-01"
+  vars:
+    fecha: "2025-06-10"
+    carpeta_base: "/tmp/alumnos"   # Usamos /tmp para no necesitar permisos de root
+    herramientas:
+      - Python 3.12
+      - Visual Studio Code
+      - Git
+      - Jupyter Notebook
+    alumno:
+      nombre: Ana García
+      curso:  Introducción a la Programación
+      grupo:  a1
+      beca:   true
+
+  # ── Tareas (se ejecutan en orden, de arriba a abajo) ──────────────
+  tasks:
+
+    - name: Crear la carpeta base de alumnos
+      ansible.builtin.file:
+        path: "{{ carpeta_base }}"
+        state: directory
+        mode: '0755'
+
+    - name: Crear la carpeta personal del alumno
+      ansible.builtin.file:
+        path: "{{ carpeta_base }}/{{ alumno.nombre | lower | replace(' ', '_') }}"
+        state: directory
+        mode: '0755'
+
+    - name: Generar fichero de bienvenida desde plantilla Jinja2
+      ansible.builtin.template:
+        src:  templates/bienvenida.j2
+        dest: "{{ carpeta_base }}/{{ alumno.nombre | lower | replace(' ', '_') }}/bienvenida.txt"
+
+    - name: Mostrar mensaje de confirmación
+      ansible.builtin.debug:
+        msg: "Entorno creado para {{ alumno.nombre }} (grupo {{ alumno.grupo | upper }})"
+
+    - name: Mostrar ruta del fichero generado
+      ansible.builtin.debug:
+        msg: "Fichero en: {{ carpeta_base }}/{{ alumno.nombre | lower | replace(' ', '_') }}/bienvenida.txt"

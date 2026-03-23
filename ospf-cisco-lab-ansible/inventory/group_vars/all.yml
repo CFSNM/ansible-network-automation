@@ -1,0 +1,15 @@
+---
+ansible_user:             ansible
+ansible_password:         "Ansible123"
+ansible_become:           true
+ansible_become_method:    enable
+ansible_become_password:  "Ansible123"
+ansible_network_os:       cisco.ios.ios
+ansible_connection:       ansible.netcommon.network_cli
+
+# Cisco IOS antiguo usa algoritmos SSH legacy — necesario para paramiko
+ansible_paramiko_look_for_keys: false
+ansible_ssh_common_args: >-
+  -o KexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1
+  -o HostKeyAlgorithms=+ssh-rsa
+  -o PubkeyAcceptedKeyTypes=+ssh-rsa

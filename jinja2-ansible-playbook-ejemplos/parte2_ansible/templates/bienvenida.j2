@@ -1,0 +1,17 @@
+═══════════════════════════════════════════
+  Bienvenido/a, {{ alumno.nombre }}!
+═══════════════════════════════════════════
+
+Curso:    {{ alumno.curso }}
+Grupo:    {{ alumno.grupo | upper }}
+Carpeta:  /tmp/alumnos/{{ alumno.nombre | lower | replace(' ', '_') }}/
+
+Tu entorno incluye:
+{% for herramienta in herramientas %}
+  - {{ herramienta }}
+{% endfor %}
+{% if alumno.beca %}
+* Tienes asignada una beca. Contacta con secretaría.
+{% endif %}
+
+Fichero generado automáticamente el {{ fecha }}.

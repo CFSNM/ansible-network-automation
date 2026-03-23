@@ -1,0 +1,42 @@
+---
+# ---------------------------------------------------------------
+# Tarea 1 — Crear proceso OSPF con router-id y passive-interface
+# ---------------------------------------------------------------
+- name: Configurar proceso OSPF — router-id y passive-interface
+  cisco.ios.ios_config:
+    lines:
+      - "router-id {{ ospf_router_id }}"
+      - "passive-interface {{ mgmt_interface }}"
+    parents: "router ospf {{ ospf_process_id }}"
+
+# ---------------------------------------------------------------
+# Tarea 2 — Añadir network statements uno a uno
+# ---------------------------------------------------------------
+- name: Configurar OSPF network statements
+  cisco.ios.ios_config:
+    lines:
+      - "network {{ item.address }} {{ item.wildcard }} area {{ item.area }}"
+    parents: "router ospf {{ ospf_process_id }}"
+  loop: "{{ ospf_networks }}"
+  loop_control:
+    label: "{{ item.address }} area {{ item.area }}"
+
+# ---------------------------------------------------------------
+# Tarea 3 — ip ospf network point-to-point por interfaz
+# ---------------------------------------------------------------
+- name: Configurar interfaces OSPF — point-to-point y area
+  cisco.ios.ios_config:
+    lines:
+      - "ip ospf {{ ospf_process_id }} area {{ item.area }}"
+      - "ip ospf network point-to-point"
+    parents: "interface {{ item.name }}"
+  loop: "{{ ospf_interfaces }}"
+  loop_control:
+    label: "{{ item.name }} -> area {{ item.area }}"
+
+# ---------------------------------------------------------------
+# Tarea 4 — Guardar configuracion
+# ---------------------------------------------------------------
+#- name: Guardar configuracion OSPF en NVRAM
+#  cisco.ios.ios_command:
+#    commands: "write memory"

@@ -1,0 +1,39 @@
+---
+- name: Despliegue completo — Base + OSPF + Verificacion
+  hosts: cisco_routers
+  gather_facts: false
+  serial: 1
+
+  pre_tasks:
+    - name: Verificar conectividad SSH
+      cisco.ios.ios_command:
+        commands: "show version | include Version"
+      register: ver_output
+
+    - name: Mostrar version IOS
+      debug:
+        msg: "{{ inventory_hostname }}: {{ ver_output.stdout[0] | regex_search('Version [\\d\\.\\(\\)]+') }}"
+
+  roles:
+    - cisco_base
+    - cisco_ospf
+
+  post_tasks:
+    - name: Verificar proceso OSPF desplegado
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf
+          - show ip ospf neighbor
+      register: post_ospf
+
+    - name: Confirmar OSPF activo
+      assert:
+        that:
+          - "ospf_router_id in post_ospf.stdout[0]"
+        fail_msg: "FALLO: router-id {{ ospf_router_id }} no encontrado en {{ inventory_hostname }}"
+        success_msg: "OK: OSPF activo con router-id {{ ospf_router_id }} en {{ inventory_hostname }}"
+      ignore_errors: true
+
+    - name: Mostrar vecinos OSPF post-despliegue
+      debug:
+        msg: "{{ post_ospf.stdout_lines[1] }}"

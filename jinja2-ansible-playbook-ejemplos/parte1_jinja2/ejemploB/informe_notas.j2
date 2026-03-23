@@ -1,0 +1,14 @@
+INFORME DE NOTAS — {{ asignatura | upper }}
+Fecha: {{ fecha }}
+Total alumnos: {{ alumnos | length }}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{% for alumno in alumnos %}
+{{ loop.index }}.  {{ alumno.nombre | ljust(20) }}  Nota: {{ alumno.nota }}
+    {%- if alumno.nota >= 9 %}   ⭐ Sobresaliente
+    {%- elif alumno.nota >= 7 %}   ✅ Notable
+    {%- elif alumno.nota >= 5 %}   🟡 Aprobado
+    {%- else %}   ❌ Suspenso
+    {%- endif %}
+{% endfor %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nota media: {{ (alumnos | map(attribute='nota') | list | sum / alumnos | length) | round(2) }}

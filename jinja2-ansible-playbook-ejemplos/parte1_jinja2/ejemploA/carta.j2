@@ -1,0 +1,15 @@
+Hola, {{ nombre | capitalize }},
+
+Te damos la bienvenida al curso "{{ curso }}".
+Tu matrícula tiene el número: {{ id_matricula }}.
+
+{% if nota_acceso >= 9 %}
+  Enhorabuena, has accedido con matrícula de honor.
+{% elif nota_acceso >= 5 %}
+  Has superado el proceso de admisión. ¡Bienvenido!
+{% else %}
+  Estás en lista de espera. Te avisaremos pronto.
+{% endif %}
+
+Atentamente,
+El equipo de secretaría

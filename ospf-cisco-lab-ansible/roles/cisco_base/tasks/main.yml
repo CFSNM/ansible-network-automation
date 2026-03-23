@@ -1,0 +1,114 @@
+﻿---
+# ---------------------------------------------------------------
+# Tarea 1 — Hostname usando el modulo declarativo ios_hostname
+# ---------------------------------------------------------------
+- name: Configurar hostname
+  cisco.ios.ios_hostname:
+    config:
+      hostname: "{{ inventory_hostname }}"
+    state: merged
+
+# ---------------------------------------------------------------
+# Tarea 2 — Dominio y lookup via ios_system
+# ---------------------------------------------------------------
+- name: Configurar dominio y deshabilitar domain-lookup
+  cisco.ios.ios_system:
+    domain_name: "{{ domain_name }}"
+    state: present
+
+# ---------------------------------------------------------------
+# Tarea 3 — Usuario ansible con ios_user (modulo dedicado)
+# ---------------------------------------------------------------
+- name: Crear usuario ansible con privilege 15
+  cisco.ios.ios_user:
+    aggregate:
+      - name: ansible
+        privilege: 15
+        password_type: secret
+        password: "{{ ansible_password }}"
+    state: present
+
+# ---------------------------------------------------------------
+# Tarea 4 — Direccionamiento de interfaces con ios_l3_interfaces
+#            (modulo declarativo para IPs, sustituye ios_config)
+# ---------------------------------------------------------------
+- name: Configurar direcciones IP en interfaces (ios_l3_interfaces)
+  cisco.ios.ios_l3_interfaces:
+    config:
+      - name: "{{ item.name }}"
+        ipv4:
+          - address: "{{ item.ipv4.address }}/{{ item.ipv4.mask | ansible.utils.ipaddr('prefix') }}"
+    state: merged
+  loop: "{{ interfaces_config }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ item.ipv4.address }}"
+
+# ---------------------------------------------------------------
+# Tarea 5 — Descripcion e interfaz up con ios_interfaces
+#            (modulo declarativo de capa 1/2)
+# ---------------------------------------------------------------
+- name: Configurar descripciones y activar interfaces (ios_interfaces)
+  cisco.ios.ios_interfaces:
+    config:
+      - name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        enabled: true
+    state: merged
+  loop: "{{ interfaces_config }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# ---------------------------------------------------------------
+# Tarea 6 — Ruta estatica de gestion con ios_static_routes
+# ---------------------------------------------------------------
+- name: Configurar ruta por defecto de gestion (ios_static_routes)
+  cisco.ios.ios_static_routes:
+    config:
+      - address_families:
+          - afi: ipv4
+            routes:
+              - dest: 0.0.0.0/0
+                next_hops:
+                  - forward_router_address: "{{ mgmt_gateway }}"
+    state: merged
+
+# ---------------------------------------------------------------
+# Tarea 7 — SSH: generacion RSA y parametros via ios_config
+#            (no existe modulo especifico para crypto key generate)
+# ---------------------------------------------------------------
+- name: Configurar dominio para RSA (requerido antes de generar clave)
+  cisco.ios.ios_config:
+    lines:
+      - "ip domain-name {{ domain_name }}"
+
+- name: Generar claves RSA para SSH (no hay modulo declarativo)
+  cisco.ios.ios_config:
+    lines:
+      - "crypto key generate rsa modulus {{ ssh_modulus }}"
+  ignore_errors: true
+
+- name: Configurar parametros SSH
+  cisco.ios.ios_config:
+    lines:
+      - "ip ssh version 2"
+      - "ip ssh time-out 60"
+      - "ip ssh authentication-retries 3"
+
+# ---------------------------------------------------------------
+# Tarea 8 — Lineas VTY con ios_vlan — no existe modulo VTY
+#            Se usa ios_config (unica opcion valida para VTY)
+# ---------------------------------------------------------------
+- name: Configurar acceso SSH en lineas VTY (ios_config — sin alternativa declarativa)
+  cisco.ios.ios_config:
+    parents: "line vty 0 4"
+    lines:
+      - "login local"
+      - "transport input ssh"
+      - "exec-timeout 30 0"
+
+# ---------------------------------------------------------------
+# Tarea 9 — Persistir configuracion con ios_command
+# ---------------------------------------------------------------
+#- name: Guardar configuracion en NVRAM
+#  cisco.ios.ios_command:
+#    commands: "write memory"

@@ -1,0 +1,6 @@
+﻿---
+- name: Desplegar OSPFv2 con ios_ospfv2 e ios_ospf_interfaces
+  hosts: cisco_routers
+  gather_facts: false
+  roles:
+    - cisco_ospf

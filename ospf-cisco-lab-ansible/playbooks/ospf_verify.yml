@@ -1,0 +1,66 @@
+---
+- name: Verificar estado OSPF
+  hosts: cisco_routers
+  gather_facts: false
+
+  tasks:
+    # -----------------------------------------------------------
+    # Recoger estado operacional con ios_command (fiable en IOS 15.x)
+    # -----------------------------------------------------------
+    - name: Recoger estado operacional OSPF
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf neighbor
+          - show ip route ospf
+          - show ip ospf interface brief
+          - show ip ospf
+      register: ospf_ops
+
+    - name: "{{ inventory_hostname }} — Vecinos OSPF"
+      debug:
+        msg: "{{ ospf_ops.stdout_lines[0] }}"
+
+    - name: "{{ inventory_hostname }} — Rutas OSPF"
+      debug:
+        msg: "{{ ospf_ops.stdout_lines[1] }}"
+
+    - name: "{{ inventory_hostname }} — Interfaces OSPF"
+      debug:
+        msg: "{{ ospf_ops.stdout_lines[2] }}"
+
+    - name: "{{ inventory_hostname }} — Proceso OSPF"
+      debug:
+        msg: "{{ ospf_ops.stdout_lines[3] }}"
+
+    # -----------------------------------------------------------
+    # Assert: proceso OSPF activo
+    # -----------------------------------------------------------
+    - name: Verificar que el proceso OSPF está activo
+      assert:
+        that:
+          - "'Routing Process' in ospf_ops.stdout[3] or 'ospf' in ospf_ops.stdout[3] | lower"
+        fail_msg: "ERROR: OSPF no está activo en {{ inventory_hostname }}"
+        success_msg: "OK: proceso OSPF activo en {{ inventory_hostname }}"
+      ignore_errors: true
+
+    # -----------------------------------------------------------
+    # Assert: vecinos en FULL (solo en routers que deben tenerlos)
+    # -----------------------------------------------------------
+    - name: Verificar vecinos OSPF en estado FULL
+      assert:
+        that:
+          - "'FULL' in ospf_ops.stdout[0]"
+        fail_msg: "ERROR: {{ inventory_hostname }} no tiene vecinos OSPF en estado FULL"
+        success_msg: "OK: {{ inventory_hostname }} tiene vecinos en estado FULL"
+      ignore_errors: true
+
+    # -----------------------------------------------------------
+    # Assert: router-id correcto usando show ip ospf (sin ios_facts)
+    # -----------------------------------------------------------
+    - name: Verificar router-id en show ip ospf
+      assert:
+        that:
+          - "ospf_router_id in ospf_ops.stdout[3]"
+        fail_msg: "ERROR: router-id {{ ospf_router_id }} no encontrado en {{ inventory_hostname }}"
+        success_msg: "OK: router-id {{ ospf_router_id }} confirmado en {{ inventory_hostname }}"
+      ignore_errors: true

@@ -1,0 +1,6 @@
+﻿---
+- name: Configuracion base de routers Cisco (modulos declarativos)
+  hosts: cisco_routers
+  gather_facts: false
+  roles:
+    - cisco_base
